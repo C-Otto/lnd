@@ -2929,6 +2929,20 @@ func (s *Switch) handlePacketAdd(packet *htlcPacket,
 			htlc.PaymentHash[:], packet.outgoingChanID,
 			linkErr)
 
+		if linkErr.FailureDetail == OutgoingFailureInsufficientBalance {
+			var linkWithMaxBandwidth = interfaceLinks[0]
+			var maxBandwidth = linkWithMaxBandwidth.Bandwidth()
+			for _, link := range interfaceLinks {
+				if link.Bandwidth() > maxBandwidth {
+					linkWithMaxBandwidth = link
+					maxBandwidth = link.Bandwidth()
+				}
+			}
+			var logPrefix = fmt.Sprintf("ChannelLink(%v)", linkWithMaxBandwidth.ChannelPoint())
+			log.Warnf("%v: insufficient bandwidth to route htlc: %v is "+
+				"larger than %v (for all channels)", logPrefix, packet.amount, maxBandwidth)
+		}
+
 		return s.failAddPacket(packet, linkErr)
 	}
 
