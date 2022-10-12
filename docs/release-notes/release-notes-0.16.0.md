@@ -131,6 +131,12 @@ crash](https://github.com/lightningnetwork/lnd/pull/7019).
 * Updated the github actions to use `make fmt-check` in its [build
   process](https://github.com/lightningnetwork/lnd/pull/6853).
 
+
+* [Allow user to update tower address without requiring a restart. Also allow
+   the removal of a tower address if the current session negotiation is not 
+  using the address in question](
+  https://github.com/lightningnetwork/lnd/pull/7025)
+
 # Contributors (Alphabetical Order)
 
 * Carla Kirk-Cohen
