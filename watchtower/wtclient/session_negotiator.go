@@ -358,6 +358,7 @@ func (n *sessionNegotiator) createSession(tower *Tower, keyIndex uint32) error {
 		}
 
 		err = n.tryAddress(sessionKey, keyIndex, tower, lnAddr)
+		tower.Addresses.ReleaseLock(addr)
 		switch {
 		case err == ErrPermanentTowerFailure:
 			// TODO(conner): report to iterator? can then be reset
