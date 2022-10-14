@@ -1300,9 +1300,10 @@ func (f *Manager) handleFundingOpen(peer lnpeer.Peer,
 		if err != nil {
 			log.Errorf("unable to query wallet: %v", err)
 		}
+		err := errors.New("Synchronizing blockchain")
 		f.failFundingFlow(
 			peer, msg.PendingChannelID,
-			lnwire.ErrSynchronizingChain,
+			err,
 		)
 		return
 	}
