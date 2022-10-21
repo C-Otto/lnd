@@ -465,7 +465,7 @@ func (c *ClientDB) RemoveTower(pubKey *btcec.PublicKey, addr net.Addr) error {
 			committedUpdateCount[s.ID]++
 		}
 
-		towerSessions, err := listTowerSessions(
+		towerSessions, err := c.listTowerSessions(
 			towerID, sessions, towersToSessionsIndex,
 			nil, WithPerCommittedUpdate(perCommittedUpdate),
 		)
@@ -826,7 +826,7 @@ func (c *ClientDB) ListClientSessions(id *TowerID,
 		// If no tower ID is specified, then fetch all the sessions
 		// known to the db.
 		if id == nil {
-			clientSessions, err = listClientAllSessions(
+			clientSessions, err = c.listClientAllSessions(
 				sessions, filterFn, opts...,
 			)
 			return err
@@ -838,7 +838,7 @@ func (c *ClientDB) ListClientSessions(id *TowerID,
 			return ErrUninitializedDB
 		}
 
-		clientSessions, err = listTowerSessions(
+		clientSessions, err = c.listTowerSessions(
 			*id, sessions, towerToSessionIndex, filterFn, opts...,
 		)
 		return err
@@ -853,7 +853,7 @@ func (c *ClientDB) ListClientSessions(id *TowerID,
 }
 
 // listClientAllSessions returns the set of all client sessions known to the db.
-func listClientAllSessions(sessions kvdb.RBucket,
+func (c *ClientDB) listClientAllSessions(sessions kvdb.RBucket,
 	filterFn ClientSessionFilterFn, opts ...ClientSessionListOption) (
 	map[SessionID]*ClientSession, error) {
 
@@ -863,7 +863,7 @@ func listClientAllSessions(sessions kvdb.RBucket,
 		// the CommittedUpdates and AckedUpdates on startup to resume
 		// committed updates and compute the highest known commit height
 		// for each channel.
-		session, err := getClientSession(sessions, k, filterFn, opts...)
+		session, err := c.getClientSession(sessions, k, filterFn, opts...)
 		if errors.Is(err, ErrSessionFailedFilterFn) {
 			return nil
 		} else if err != nil {
@@ -883,10 +883,9 @@ func listClientAllSessions(sessions kvdb.RBucket,
 
 // listTowerSessions returns the set of all client sessions known to the db
 // that are associated with the given tower id.
-func listTowerSessions(id TowerID, sessionsBkt,
+func (c *ClientDB) listTowerSessions(id TowerID, sessionsBkt,
 	towerToSessionIndex kvdb.RBucket, filterFn ClientSessionFilterFn,
 	opts ...ClientSessionListOption) (
-
 	map[SessionID]*ClientSession, error) {
 
 	towerIndexBkt := towerToSessionIndex.NestedReadBucket(id.Bytes())
@@ -900,7 +899,7 @@ func listTowerSessions(id TowerID, sessionsBkt,
 		// the CommittedUpdates and AckedUpdates on startup to resume
 		// committed updates and compute the highest known commit height
 		// for each channel.
-		session, err := getClientSession(
+		session, err := c.getClientSession(
 			sessionsBkt, k, filterFn, opts...,
 		)
 		if errors.Is(err, ErrSessionFailedFilterFn) {
@@ -1349,7 +1348,7 @@ func WithPerCommittedUpdate(cb PerCommittedUpdateCB) ClientSessionListOption {
 // getClientSession loads the full ClientSession associated with the serialized
 // session id. This method populates the CommittedUpdates, AckUpdates and Tower
 // in addition to the ClientSession's body.
-func getClientSession(sessions kvdb.RBucket, idBytes []byte,
+func (c *ClientDB) getClientSession(sessions kvdb.RBucket, idBytes []byte,
 	filterFn ClientSessionFilterFn,
 	opts ...ClientSessionListOption) (*ClientSession, error) {
 
