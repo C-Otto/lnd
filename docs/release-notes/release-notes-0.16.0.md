@@ -178,6 +178,9 @@ https://github.com/lightningnetwork/lnd/pull/6963/)
 * [Allow caller to filter sessions at the time of reading them from 
   disk](https://github.com/lightningnetwork/lnd/pull/7059)
  
+* [Store AckedUpdates in a more compact 
+  way](https://github.com/lightningnetwork/lnd/pull/7055)
+
 ### Tooling and documentation
 
 * [The `golangci-lint` tool was updated to
