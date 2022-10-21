@@ -1491,6 +1491,7 @@ func newServer(cfg *Config, listenAddrs []net.Addr,
 		}
 
 		s.towerClient, err = wtclient.New(&wtclient.Config{
+			ChainNotifier:   s.cc.ChainNotifier,
 			IsChannelClosed: isChanClosed,
 			SubscribeChannelEvents: func() (subscribe.Subscription,
 				error) {
@@ -1521,6 +1522,7 @@ func newServer(cfg *Config, listenAddrs []net.Addr,
 			blob.Type(blob.FlagAnchorChannel)
 
 		s.anchorTowerClient, err = wtclient.New(&wtclient.Config{
+			ChainNotifier:   s.cc.ChainNotifier,
 			IsChannelClosed: isChanClosed,
 			SubscribeChannelEvents: func() (subscribe.Subscription,
 				error) {
