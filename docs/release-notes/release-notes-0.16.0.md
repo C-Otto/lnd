@@ -7,9 +7,9 @@
 
 ## RPC
 
-The `RegisterConfirmationsNtfn` call of the `chainnotifier` RPC sub-server [now
-optionally supports returning the entire block that confirmed the
-transaction](https://github.com/lightningnetwork/lnd/pull/6730).
+* The `RegisterConfirmationsNtfn` call of the `chainnotifier` RPC sub-server 
+ [now optionally supports returning the entire block that confirmed the 
+ transaction](https://github.com/lightningnetwork/lnd/pull/6730).
 
 * [Add `macaroon_root_key` field to
   `InitWalletRequest`](https://github.com/lightningnetwork/lnd/pull/6457) to
@@ -28,7 +28,38 @@ transaction](https://github.com/lightningnetwork/lnd/pull/6730).
   Similar to TrackPaymentV2, but for any inflight payment.
 
 * [Catch and throw an error](https://github.com/lightningnetwork/lnd/pull/6945)
-  during `openchannel` if the local funding amount given is zero. 
+  during `openchannel` if the local funding amount given is zero.
+
+* [Extend](https://github.com/lightningnetwork/lnd/pull/6831) the HTLC
+  interceptor server implementation with watchdog functionality to cancel back
+  HTLCs for which an interceptor client does not provide a resolution in time.
+  If an HTLC expires, the counterparty will claim it back on-chain and the
+  receiver will lose it. Therefore the receiver can just as well fail off-chain
+  a few blocks before so that the channel is saved.
+
+* [Make remote channel reserve amount configurable for 
+  `openchannel`](https://github.com/lightningnetwork/lnd/pull/6956)
+
+* [`ForwardingHistory` ](https://github.com/lightningnetwork/lnd/pull/7001) now
+  enriches each forwarding event with inbound and outbound peer alias names if
+  the new flag `PeerAliasLookup` in `ForwardingHistoryRequest` is set to true.
+  [`lncli fwdinghistory` ](https://github.com/lightningnetwork/lnd/pull/7083)
+  enables this feature by default but adds a new flag `skip_peer_alias_lookup`
+  to skip the lookup.
+
+* The graph lookups method `DescribeGraph`, `GetNodeInfo` and `GetChanInfo` now
+  [expose tlv data](https://github.com/lightningnetwork/lnd/pull/7085) that is
+  broadcast over the gossip network.
+
+* [Add new HTLC notifier event and lookup
+  RPC](https://github.com/lightningnetwork/lnd/pull/6517) for the final
+  settlement of incoming HTLCs. This allows applications to wait for the HTLC to
+  actually disappear from all valid commitment transactions, rather than assume
+  that it will. With the new extensions, situations can be avoided where the
+  application considers an HTLC settled, but in reality the HTLC has timed out.
+
+  Final resolution data will only be available for htlcs that are resolved
+  after upgrading lnd.
 
 ## Wallet
 
@@ -36,6 +67,13 @@ transaction](https://github.com/lightningnetwork/lnd/pull/6730).
   addresses into the internal
   wallet](https://github.com/lightningnetwork/lnd/pull/6775). NOTE that funding
   PSBTs from imported tap scripts is not currently possible.
+
+* [The wallet birthday is now used properly when creating a watch-only wallet
+  to avoid scanning the whole
+  chain](https://github.com/lightningnetwork/lnd/pull/7056).
+
+* [Add log message for edge
+  case](https://github.com/lightningnetwork/lnd/pull/7115).
 
 ## Build
 
@@ -46,6 +84,12 @@ minimum version needed to build the project.
 [The minimum recommended version of the Go 1.19.x series is 1.19.2 because
 1.19.1 contained a bug that affected lnd and resulted in a
 crash](https://github.com/lightningnetwork/lnd/pull/7019).
+
+[Use Go's `runtime/debug` package to get information about the build](
+https://github.com/lightningnetwork/lnd/pull/6963/)
+
+[A wire parsing bug has been fixed that would cause lnd to be unable _decode_
+certain large transactions](https://github.com/lightningnetwork/lnd/pull/7100).
 
 ## Misc
 
@@ -73,6 +117,20 @@ crash](https://github.com/lightningnetwork/lnd/pull/7019).
 * [Fixed potential data race on funding manager
   restart](https://github.com/lightningnetwork/lnd/pull/6929).
 
+* [Fixed a flake in the TestBlockCacheMutexes unit
+  test](https://github.com/lightningnetwork/lnd/pull/7029).
+
+* [Create a helper function to wait for peer to come
+  online](https://github.com/lightningnetwork/lnd/pull/6931).
+
+* [Stop handling peer warning messages as errors](https://github.com/lightningnetwork/lnd/pull/6840)
+
+* [Stop sending a synchronizing error on the wire when out of
+  sync](https://github.com/lightningnetwork/lnd/pull/7039).
+
+* [Update cert module](https://github.com/lightningnetwork/lnd/pull/6573) to
+  allow a way to update the tls certificate without restarting lnd.
+
 ## `lncli`
 * [Add an `insecure` flag to skip tls auth as well as a `metadata` string slice
   flag](https://github.com/lightningnetwork/lnd/pull/6818) that allows the
@@ -94,6 +152,10 @@ crash](https://github.com/lightningnetwork/lnd/pull/7019).
   so that the user can specify fees during channel creation time in addition
   to the default configuration.
 
+* [Sleep for one second when funding locked message is not
+  received](https://github.com/lightningnetwork/lnd/pull/7095) to avoid CPU
+  spike.
+
 ## Code Health
 
 * [test: use `T.TempDir` to create temporary test
@@ -102,6 +164,12 @@ crash](https://github.com/lightningnetwork/lnd/pull/7019).
 * [The `tlv` package now allows decoding records larger than 65535 bytes. The
   caller is expected to know that doing so with untrusted input is
   unsafe.](https://github.com/lightningnetwork/lnd/pull/6779)
+ 
+* [test: replace defer cleanup with
+  `t.Cleanup`](https://github.com/lightningnetwork/lnd/pull/6864).
+
+* [test: fix loop variables being accessed in
+  closures](https://github.com/lightningnetwork/lnd/pull/7032).
  
 ## Watchtowers
 
@@ -115,11 +183,10 @@ crash](https://github.com/lightningnetwork/lnd/pull/7019).
   struct](https://github.com/lightningnetwork/lnd/pull/6928) in order to
   improve the performance of fetching a `ClientSession` from the DB.
 
-* [Create a helper function to wait for peer to come
-  online](https://github.com/lightningnetwork/lnd/pull/6931).
-
-* [test: replace defer cleanup with
-  `t.Cleanup`](https://github.com/lightningnetwork/lnd/pull/6864)
+* [Allow user to update tower address without requiring a restart. Also allow
+  the removal of a tower address if the current session negotiation is not
+  using the address in question](
+  https://github.com/lightningnetwork/lnd/pull/7025)
 
 ### Tooling and documentation
 
@@ -131,15 +198,32 @@ crash](https://github.com/lightningnetwork/lnd/pull/7019).
 * Updated the github actions to use `make fmt-check` in its [build
   process](https://github.com/lightningnetwork/lnd/pull/6853).
 
+* Database related code was refactored to [allow external tools to use it more
+  easily](https://github.com/lightningnetwork/lnd/pull/5561), in preparation for
+  adding a data migration functionality to `lndinit`.
 
-* [Allow user to update tower address without requiring a restart. Also allow
-   the removal of a tower address if the current session negotiation is not 
-  using the address in question](
-  https://github.com/lightningnetwork/lnd/pull/7025)
+* [`golangci-lint` will now check new code using additional
+  linters.](https://github.com/lightningnetwork/lnd/pull/7064)
+
+* Update github actions to [check commits against the target base 
+  branch](https://github.com/lightningnetwork/lnd/pull/7103) rather than just 
+  using the master branch. 
+
+### Integration test
+
+The `lntest` has been
+[refactored](https://github.com/lightningnetwork/lnd/pull/6759) to provide a
+better testing suite for writing integration tests. A new defined structure is
+implemented, please refer to
+[README](https://github.com/lightningnetwork/lnd/tree/master/lntemp) for more
+details. Along the way, several
+PRs([6776](https://github.com/lightningnetwork/lnd/pull/6776)) have been made
+to refactor the itest for code health and maintenance.
 
 # Contributors (Alphabetical Order)
 
 * Carla Kirk-Cohen
+* Carsten Otto
 * cutiful
 * Daniel McNally
 * Elle Mouton
@@ -148,7 +232,13 @@ crash](https://github.com/lightningnetwork/lnd/pull/7019).
 * Graham Krizek
 * hieblmi
 * Jesse de Wit
+* Joost Jager
+* Jordi Montes
 * Matt Morehouse
+* Michael Street
+* Jordi Montes
 * Olaoluwa Osuntokun
 * Oliver Gugger
 * Priyansh Rastogi
+* Roei Erez
+* Yong Yu
