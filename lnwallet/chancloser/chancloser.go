@@ -3,7 +3,6 @@ package chancloser
 import (
 	"bytes"
 	"fmt"
-
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -91,7 +90,7 @@ const (
 	// of the initiator, to decide when the negotiated fee is too high. By
 	// default, we want to bail out if we attempt to negotiate a fee that's
 	// 3x higher than our max fee.
-	defaultMaxFeeMultiplier = 3
+	defaultMaxFeeMultiplier = 5
 )
 
 // Channel abstracts away from the core channel state machine by exposing an
@@ -672,28 +671,46 @@ func (c *ChanCloser) ProcessCloseMsg(msg lnwire.Message) ([]lnwire.Message,
 			feeProposal := calcCompromiseFee(c.chanPoint, c.idealFeeSat,
 				c.lastFeeProposal, remoteProposedFee,
 			)
-			if c.cfg.Channel.IsInitiator() && feeProposal > c.maxFee {
-				return nil, false, fmt.Errorf("%w: %v > %v",
-					ErrProposalExeceedsMaxFee, feeProposal,
-					c.maxFee)
+			if c.cfg.Channel.IsInitiator() {
+				if feeProposal > c.maxFee {
+					return nil, false, fmt.Errorf("%w: %v > %v",
+						ErrProposalExeceedsMaxFee, feeProposal,
+						c.maxFee)
+				}
+
+				// With our new fee proposal calculated, we'll craft a new close
+				// signed signature to send to the other party so we can continue
+				// the fee negotiation process.
+				closeSigned, err := c.proposeCloseSigned(feeProposal)
+				if err != nil {
+					return nil, false, err
+				}
+
+				// If the compromise fee doesn't match what the peer proposed, then
+				// we'll return this latest close signed message so we can continue
+				// negotiation.
+				if feeProposal != remoteProposedFee {
+					chancloserLog.Debugf("ChannelPoint(%v): close tx fee "+
+						"disagreement, continuing negotiation", c.chanPoint)
+					return []lnwire.Message{closeSigned}, false, nil
+				}
+			} else {
+				if remoteProposedFee < feeProposal {
+					closeSigned, err := c.proposeCloseSigned(feeProposal)
+					if err != nil {
+						return nil, false, err
+					}
+					chancloserLog.Debugf("ChannelPoint(%v): close tx fee "+
+						"disagreement, continuing negotiation", c.chanPoint)
+					return []lnwire.Message{closeSigned}, false, nil
+				} else {
+					_, err := c.proposeCloseSigned(remoteProposedFee)
+					if err != nil {
+						return nil, false, err
+					}
+				}
 			}
 
-			// With our new fee proposal calculated, we'll craft a new close
-			// signed signature to send to the other party so we can continue
-			// the fee negotiation process.
-			closeSigned, err := c.proposeCloseSigned(feeProposal)
-			if err != nil {
-				return nil, false, err
-			}
-
-			// If the compromise fee doesn't match what the peer proposed, then
-			// we'll return this latest close signed message so we can continue
-			// negotiation.
-			if feeProposal != remoteProposedFee {
-				chancloserLog.Debugf("ChannelPoint(%v): close tx fee "+
-					"disagreement, continuing negotiation", c.chanPoint)
-				return []lnwire.Message{closeSigned}, false, nil
-			}
 		}
 
 		chancloserLog.Infof("ChannelPoint(%v) fee of %v accepted, ending "+
@@ -831,13 +848,11 @@ func feeInAcceptableRange(localFee, remoteFee btcutil.Amount) bool {
 // our offered fee. Otherwise, if up is false, then we'll attempt to decrease
 // our offered fee.
 func ratchetFee(fee btcutil.Amount, up bool) btcutil.Amount {
-	// If we need to ratchet up, then we'll increase our fee by 10%.
 	if up {
-		return fee + ((fee * 1) / 10)
+		return btcutil.Amount(int64(float64(fee) * 1.15))
 	}
 
-	// Otherwise, we'll *decrease* our fee by 10%.
-	return fee - ((fee * 1) / 10)
+	return btcutil.Amount(int64(float64(fee)*0.85 + 0.5))
 }
 
 // calcCompromiseFee performs the current fee negotiation algorithm, taking
