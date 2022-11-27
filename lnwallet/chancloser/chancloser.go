@@ -695,7 +695,7 @@ func (c *ChanCloser) ProcessCloseMsg(msg lnwire.Message) ([]lnwire.Message,
 					return []lnwire.Message{closeSigned}, false, nil
 				}
 			} else {
-				if remoteProposedFee < c.idealFeeSat {
+				if remoteProposedFee < feeProposal {
 					closeSigned, err := c.proposeCloseSigned(feeProposal)
 					if err != nil {
 						return nil, false, err
