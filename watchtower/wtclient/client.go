@@ -997,14 +997,14 @@ func (c *TowerClient) handleClosableSessions(
 					item.sessionID,
 				)
 				if err != nil {
-					log.Error("error calling "+
+					log.Errorf("error calling "+
 						"GetClientSession: %v", err)
 					continue
 				}
 
 				err = c.deleteSessionFromTower(sess)
 				if err != nil {
-					log.Error("error deleting session "+
+					log.Errorf("error deleting session "+
 						"from tower: %v", err)
 					continue
 				}
