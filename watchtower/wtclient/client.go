@@ -110,7 +110,7 @@ type Client interface {
 
 	// LookupTower retrieves a registered watchtower through its public key.
 	LookupTower(*btcec.PublicKey,
-	...wtdb.ClientSessionListOption) (*RegisteredTower, error)
+		...wtdb.ClientSessionListOption) (*RegisteredTower, error)
 
 	// Stats returns the in-memory statistics of the client since startup.
 	Stats() ClientStats
@@ -1081,7 +1081,7 @@ func (c *TowerClient) deleteSessionFromTower(sess *wtdb.ClientSession) error {
 			// exit.
 			tower.Addresses.Reset()
 
-			return fmt.Errorf("failed to dial tower(%s) at any "+
+			return fmt.Errorf("failed to dial tower(%v) at any "+
 				"available addresses",
 				tower.IdentityKey.SerializeCompressed())
 		}
