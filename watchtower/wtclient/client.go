@@ -32,11 +32,11 @@ import (
 const (
 	// DefaultReadTimeout specifies the default duration we will wait during
 	// a read before breaking out of a blocking read.
-	DefaultReadTimeout = 15 * time.Second
+	DefaultReadTimeout = 25 * time.Second
 
 	// DefaultWriteTimeout specifies the default duration we will wait during
 	// a write before breaking out of a blocking write.
-	DefaultWriteTimeout = 15 * time.Second
+	DefaultWriteTimeout = 25 * time.Second
 
 	// DefaultStatInterval specifies the default interval between logging
 	// metrics about the client's operation.
@@ -998,21 +998,21 @@ func (c *TowerClient) handleClosableSessions(
 				)
 				if err != nil {
 					log.Errorf("error calling "+
-						"GetClientSession: %v", err)
+						"GetClientSession for %v: %v", item.sessionID, err)
 					continue
 				}
 
 				err = c.deleteSessionFromTower(sess)
 				if err != nil {
-					log.Errorf("error deleting session "+
-						"from tower: %v", err)
+					log.Errorf("error deleting session(%v) "+
+						"from tower: %v", item.sessionID, err)
 					continue
 				}
 
 				err = c.cfg.DB.DeleteSession(item.sessionID)
 				if err != nil {
 					log.Errorf("could not delete "+
-						"session(%s) from DB: %v", err)
+						"session(%v) from DB: %v", item.sessionID, err)
 				}
 			}
 
