@@ -6,11 +6,10 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
-	"io"
-
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-errors/errors"
 	"github.com/lightningnetwork/lnd/tlv"
+	"io"
 )
 
 // FailureMessage represents the onion failure object identified by its unique
@@ -1240,7 +1239,7 @@ func DecodeFailure(r io.Reader, pver uint32) (FailureMessage, error) {
 		return nil, fmt.Errorf("unable to read pad len: %w", err)
 	}
 
-	if _, err := io.CopyN(ioutil.Discard, r, int64(padLength)); err != nil {
+	if _, err := io.CopyN(io.Discard, r, int64(padLength)); err != nil {
 		return nil, fmt.Errorf("unable to read padding %w", err)
 	}
 
