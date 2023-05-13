@@ -38,7 +38,7 @@ const (
 	// commitment anchors. This value is only used when the commitment
 	// transaction has no valid HTLCs for determining a confirmation
 	// deadline.
-	anchorSweepConfTarget = 144
+	anchorSweepConfTarget = 500
 
 	// arbitratorBlockBufferSize is the size of the buffer we give to each
 	// channel arbitrator.
