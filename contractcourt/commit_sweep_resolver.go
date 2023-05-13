@@ -21,7 +21,7 @@ import (
 const (
 	// commitOutputConfTarget is the default confirmation target we'll use
 	// for sweeps of commit outputs that belong to us.
-	commitOutputConfTarget = 6
+	commitOutputConfTarget = 500
 )
 
 // commitSweepResolver is a resolver that will attempt to sweep the commitment
