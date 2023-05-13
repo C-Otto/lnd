@@ -402,7 +402,7 @@ func (h *htlcSuccessResolver) resolveRemoteCommitOutput() (
 		h.sweepTx, err = h.Sweeper.CreateSweepTx(
 			[]input.Input{&inp},
 			sweep.FeePreference{
-				ConfTarget: sweepConfTarget,
+				ConfTarget: resolvedHtlcSweepConfTarget,
 			}, 0,
 		)
 		if err != nil {
