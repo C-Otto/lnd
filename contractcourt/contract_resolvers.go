@@ -19,7 +19,11 @@ var (
 const (
 	// sweepConfTarget is the default number of blocks that we'll use as a
 	// confirmation target when sweeping.
-	sweepConfTarget = 6
+	sweepConfTarget = 500
+
+	// resolvedHtlcSweepConfTarget is used when sweeping a HTLC output
+	// using the known preimage.
+	resolvedHtlcSweepConfTarget = 6
 
 	// secondLevelConfTarget is the confirmation target we'll use when
 	// adding fees to our second-level HTLC transactions.
