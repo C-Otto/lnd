@@ -42,6 +42,15 @@ const (
 	// DefaultMailboxDeliveryTimeout is the duration after which Adds will
 	// be cancelled if they could not get added to an outgoing commitment.
 	DefaultMailboxDeliveryTimeout = time.Minute
+
+	// RoutingLocalThreshold is used when we try to route via one of
+	// multiple channels. Channels with at least RoutingLocalThreshold
+	// msat on the local side are preferred so that, if we also initiated
+	// the channel, we can pay on-chain fees for non-dust HTLCs.
+	RoutingLocalThreshold = lnwire.MilliSatoshi(100_000_000)
+
+	// MaxBitcoin is the maximum number of bitcoins that may exist.
+	MaxBitcoin = lnwire.MilliSatoshi(21 * 1_000_000 * 100_000_000 * 1_000)
 )
 
 var (
@@ -1236,12 +1245,23 @@ func (s *Switch) handlePacketForward(packet *htlcPacket) error {
 
 		// Choose the channel with the lowest bandwidth out of the set
 		// of links that can forward this htlc.
-		destination := destinations[0]
-		var minBandwidth = destination.Bandwidth()
+		var destination ChannelLink = nil
+		var minBandwidth = MaxBitcoin
 		for _, link := range destinations {
-			if link.Bandwidth() < minBandwidth {
+			if link.Bandwidth() < minBandwidth && link.Bandwidth() > RoutingLocalThreshold {
 				minBandwidth = link.Bandwidth()
 				destination = link
+			}
+		}
+		// all channels are low on funds, pick the channel with the
+		// highest bandwidth
+		var maxBandwidth = lnwire.MilliSatoshi(0)
+		if destination == nil {
+			for _, link := range destinations {
+				if link.Bandwidth() > maxBandwidth {
+					maxBandwidth = link.Bandwidth()
+					destination = link
+				}
 			}
 		}
 
