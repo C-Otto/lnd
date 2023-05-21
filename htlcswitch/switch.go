@@ -54,11 +54,6 @@ var (
 	// through the switch and is locked into another commitment txn.
 	ErrDuplicateAdd = errors.New("duplicate add HTLC detected")
 
-	// ErrUnknownErrorDecryptor signals that we were unable to locate the
-	// error decryptor for this payment. This is likely due to restarting
-	// the daemon.
-	ErrUnknownErrorDecryptor = errors.New("unknown error decryptor")
-
 	// ErrSwitchExiting signaled when the switch has received a shutdown
 	// request.
 	ErrSwitchExiting = errors.New("htlcswitch shutting down")
