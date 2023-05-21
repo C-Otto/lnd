@@ -1240,16 +1240,11 @@ func (s *Switch) handlePacketForward(packet *htlcPacket) error {
 		}
 
 		// Choose the channel with the lowest bandwidth out of the set
-		// of links that can forward this htlc. Out of those, pick the
-		// newest channel (by open block height).
+		// of links that can forward this htlc.
 		destination := destinations[0]
 		var minBandwidth = destination.Bandwidth()
-		var maxBlockHeight = uint32(0)
 		for _, link := range destinations {
-			if link.Bandwidth() == minBandwidth && link.ShortChanID().BlockHeight > maxBlockHeight {
-				minBandwidth = link.Bandwidth()
-				destination = link
-			} else if link.Bandwidth() < minBandwidth {
+			if link.Bandwidth() < minBandwidth {
 				minBandwidth = link.Bandwidth()
 				destination = link
 			}
