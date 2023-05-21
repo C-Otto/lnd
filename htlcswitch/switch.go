@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -2921,11 +2920,16 @@ func (s *Switch) handlePacketAdd(packet *htlcPacket,
 		return s.failAddPacket(packet, linkErr)
 	}
 
-	// Choose a random link out of the set of links that can forward this
-	// htlc. The reason for randomization is to evenly distribute the htlc
-	// load without making assumptions about what the best channel is.
-	//nolint:gosec
-	destination := destinations[rand.Intn(len(destinations))]
+	// Choose the channel with the lowest bandwidth out of the set
+	// of links that can forward this htlc.
+	destination := destinations[0]
+	var minBandwidth = destination.Bandwidth()
+	for _, link := range destinations {
+		if link.Bandwidth() < minBandwidth {
+			minBandwidth = link.Bandwidth()
+			destination = link
+		}
+	}
 
 	// Retrieve the incoming link by its ShortChannelID. Note that the
 	// incomingChanID is never set to hop.Source here.
