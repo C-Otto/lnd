@@ -1243,7 +1243,7 @@ func (s *Switch) handlePacketForward(packet *htlcPacket) error {
 		var destination ChannelLink = nil
 		var minBandwidth = MaxBitcoin
 		for _, link := range destinations {
-			if link.Bandwidth() < minBandwidth && link.Bandwidth() > RoutingLocalThreshold {
+			if link.Bandwidth() < minBandwidth && link.Bandwidth()-packet.amount > RoutingLocalThreshold {
 				minBandwidth = link.Bandwidth()
 				destination = link
 			}
