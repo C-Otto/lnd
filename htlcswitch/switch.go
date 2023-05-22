@@ -47,10 +47,10 @@ const (
 	// multiple channels. Channels with at least RoutingLocalThreshold
 	// msat on the local side are preferred so that, if we also initiated
 	// the channel, we can pay on-chain fees for non-dust HTLCs.
-	RoutingLocalThreshold = 100_000_000
+	RoutingLocalThreshold = lnwire.MilliSatoshi(100_000_000)
 
 	// MaxBitcoin is the maximum number of bitcoins that may exist.
-	MaxBitcoin = lnwire.MilliSatoshi(21 * 100_000_000 * 1_000)
+	MaxBitcoin = lnwire.MilliSatoshi(21 * 1_000_000 * 100_000_000 * 1_000)
 )
 
 var (
