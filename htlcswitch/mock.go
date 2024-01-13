@@ -903,6 +903,7 @@ func (f *mockChannelLink) Start() error {
 func (f *mockChannelLink) ChanID() lnwire.ChannelID                     { return f.chanID }
 func (f *mockChannelLink) ShortChanID() lnwire.ShortChannelID           { return f.shortChanID }
 func (f *mockChannelLink) Bandwidth() lnwire.MilliSatoshi               { return 99999999 }
+func (f *mockChannelLink) Capacity() btcutil.Amount                     { return btcutil.Amount(2 * 99999999) }
 func (f *mockChannelLink) Peer() lnpeer.Peer                            { return f.peer }
 func (f *mockChannelLink) ChannelPoint() *wire.OutPoint                 { return &wire.OutPoint{} }
 func (f *mockChannelLink) Stop()                                        {}

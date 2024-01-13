@@ -2381,6 +2381,10 @@ func (l *channelLink) Bandwidth() lnwire.MilliSatoshi {
 	return l.channel.AvailableBalance()
 }
 
+func (l *channelLink) Capacity() btcutil.Amount {
+	return l.channel.Capacity
+}
+
 // MayAddOutgoingHtlc indicates whether we can add an outgoing htlc with the
 // amount provided to the link. This check does not reserve a space, since
 // forwards or other payments may use the available slot, so it should be
