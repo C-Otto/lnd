@@ -1304,7 +1304,7 @@ func (c *ChannelArbitrator) sweepAnchors(anchors *lnwallet.AnchorResolutions,
 		htlcs htlcSet, anchorPath string) error {
 
 		// Find the deadline for this specific anchor.
-		deadline, err := c.findCommitmentDeadline(heightHint, htlcs)
+		deadline, actual_timeout, err := c.findCommitmentDeadline(heightHint, htlcs)
 		if err != nil {
 			return err
 		}
@@ -1316,7 +1316,7 @@ func (c *ChannelArbitrator) sweepAnchors(anchors *lnwallet.AnchorResolutions,
 		// Check the deadline against the default value. If it's less
 		// than the default value of 144, it means there is a deadline
 		// and we will perform a CPFP for this commitment tx.
-		if deadline < anchorSweepConfTarget {
+		if actual_timeout {
 			// Signal that this is a force sweep, so that the
 			// anchor will be swept even if it isn't economical
 			// purely based on the anchor value.
@@ -1420,7 +1420,7 @@ func (c *ChannelArbitrator) sweepAnchors(anchors *lnwallet.AnchorResolutions,
 // means we've left behind and should increase our fee to make the transaction
 // confirmed asap.
 func (c *ChannelArbitrator) findCommitmentDeadline(heightHint uint32,
-	htlcs htlcSet) (uint32, error) {
+	htlcs htlcSet) (uint32, bool, error) {
 
 	deadlineMinHeight := uint32(math.MaxUint32)
 
@@ -1460,7 +1460,7 @@ func (c *ChannelArbitrator) findCommitmentDeadline(heightHint uint32,
 		// this HTLC.
 		preimageAvailable, err := c.isPreimageAvailable(htlc.RHash)
 		if err != nil {
-			return 0, err
+			return 0, false, err
 		}
 
 		if !preimageAvailable {
@@ -1502,7 +1502,7 @@ func (c *ChannelArbitrator) findCommitmentDeadline(heightHint uint32,
 		"using deadlineMinHeight=%d, heightHint=%d",
 		c.cfg.ChanPoint, deadline, deadlineMinHeight, heightHint)
 
-	return deadline, nil
+	return deadline, deadlineMinHeight != math.MaxUint32, nil
 }
 
 // launchResolvers updates the activeResolvers list and starts the resolvers.
