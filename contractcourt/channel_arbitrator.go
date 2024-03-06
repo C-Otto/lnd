@@ -2685,13 +2685,6 @@ func (c *ChannelArbitrator) channelAttendant(bestHeight int32) {
 			}
 			bestHeight = blockHeight
 
-			// If we're not in the default state, then we can
-			// ignore this signal as we're waiting for contract
-			// resolution.
-			if c.state != StateDefault {
-				continue
-			}
-
 			// Now that a new block has arrived, we'll attempt to
 			// advance our state forward.
 			nextState, _, err := c.advanceState(
