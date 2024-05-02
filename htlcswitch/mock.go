@@ -903,6 +903,10 @@ func (f *mockChannelLink) Bandwidth() lnwire.MilliSatoshi {
 	return 99999999
 }
 
+func (l *mockChannelLink) Capacity() btcutil.Amount {
+	return btcutil.Amount(2 * 99999999)
+}
+
 func (f *mockChannelLink) PeerPubKey() [33]byte {
 	return f.peer.PubKey()
 }

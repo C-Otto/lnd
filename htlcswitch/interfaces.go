@@ -2,6 +2,7 @@ package htlcswitch
 
 import (
 	"context"
+	"github.com/btcsuite/btcd/btcutil"
 
 	"github.com/btcsuite/btcd/wire"
 	"github.com/lightningnetwork/lnd/channeldb"
@@ -120,6 +121,8 @@ type ChannelUpdateHandler interface {
 	// takes into account any forwarded but un-cleared HTLC's, and any
 	// HTLC's which have been set to the over flow queue.
 	Bandwidth() lnwire.MilliSatoshi
+
+	Capacity() btcutil.Amount
 
 	// EligibleToForward returns a bool indicating if the channel is able
 	// to actively accept requests to forward HTLC's. A channel may be
