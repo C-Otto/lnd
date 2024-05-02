@@ -100,8 +100,8 @@ const (
 	// defaultMaxFeeMultiplier is a multiplier we'll apply to the ideal fee
 	// of the initiator, to decide when the negotiated fee is too high. By
 	// default, we want to bail out if we attempt to negotiate a fee that's
-	// 3x higher than our max fee.
-	defaultMaxFeeMultiplier = 3
+	// 5x higher than our max fee.
+	defaultMaxFeeMultiplier = 5
 )
 
 // ChanCloseCfg holds all the items that a ChanCloser requires to carry out its
@@ -312,7 +312,7 @@ func (c *ChanCloser) initFeeBaseline() {
 	)
 
 	// When we're the initiator, we'll want to also factor in the highest
-	// fee we want to pay. This'll either be 3x the ideal fee, or the
+	// fee we want to pay. This will either be 5x the ideal fee, or the
 	// specified explicit max fee.
 	c.maxFee = c.idealFeeSat * defaultMaxFeeMultiplier
 	if c.cfg.MaxFee > 0 {
@@ -774,32 +774,49 @@ func (c *ChanCloser) ReceiveClosingSigned( //nolint:funlen
 				c.chanPoint, c.idealFeeSat, c.lastFeeProposal,
 				remoteProposedFee,
 			)
-			if c.cfg.Channel.IsInitiator() && proposal > c.maxFee {
-				return noClosing, fmt.Errorf(
-					"%w: %v > %v",
-					ErrProposalExceedsMaxFee,
-					proposal, c.maxFee)
-			}
+			if c.cfg.Channel.IsInitiator() {
+				if proposal > c.maxFee {
+					return noClosing, fmt.Errorf(
+						"%w: %v > %v",
+						ErrProposalExceedsMaxFee,
+						proposal, c.maxFee)
+				}
 
-			// With our new fee proposal calculated, we'll craft a
-			// new close signed signature to send to the other
-			// party so we can continue the fee negotiation
-			// process.
-			closeSigned, err := c.proposeCloseSigned(proposal)
-			if err != nil {
-				return noClosing, fmt.Errorf("unable to sign "+
-					"new co op close offer: %w", err)
-			}
+				// With our new fee proposal calculated, we'll craft a
+				// new close signed signature to send to the other
+				// party, so we can continue the fee negotiation
+				// process.
+				closeSigned, err := c.proposeCloseSigned(proposal)
+				if err != nil {
+					return noClosing, fmt.Errorf("unable to sign "+
+						"new co op close offer: %w", err)
+				}
 
-			// If the compromise fee doesn't match what the peer
-			// proposed, then we'll return this latest close signed
-			// message so we can continue negotiation.
-			if proposal != remoteProposedFee {
-				chancloserLog.Debugf("ChannelPoint(%v): close "+
-					"tx fee disagreement, continuing "+
-					"negotiation", c.chanPoint)
+				// If the compromise fee doesn't match what the peer
+				// proposed, then we'll return this latest close signed
+				// message, so we can continue negotiation.
+				if proposal != remoteProposedFee {
+					chancloserLog.Debugf("ChannelPoint(%v): close "+
+						"tx fee disagreement, continuing "+
+						"negotiation", c.chanPoint)
 
-				return fn.Some(*closeSigned), nil
+					return fn.Some(*closeSigned), nil
+				}
+			} else {
+				if remoteProposedFee < proposal {
+					closeSigned, err := c.proposeCloseSigned(proposal)
+					if err != nil {
+						return noClosing, err
+					}
+					chancloserLog.Debugf("ChannelPoint(%v): close tx fee "+
+						"disagreement, continuing negotiation", c.chanPoint)
+					return fn.Some(*closeSigned), nil
+				} else {
+					_, err := c.proposeCloseSigned(remoteProposedFee)
+					if err != nil {
+						return noClosing, err
+					}
+				}
 			}
 		}
 
