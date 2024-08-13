@@ -2949,13 +2949,13 @@ func (s *Switch) handlePacketAdd(packet *htlcPacket,
 		return s.failAddPacket(packet, linkErr)
 	}
 
-	// Choose the channel with the lowest bandwidth out of the set
+	// Choose the channel with the highest capacity out of the set
 	// of links that can forward this htlc.
 	var destination ChannelLink = nil
-	var minBandwidth = MaxBitcoin
+	var maxCapacity = btcutil.Amount(0)
 	for _, link := range destinations {
-		if link.Bandwidth() < minBandwidth && link.Bandwidth()-packet.amount > RoutingLocalThreshold {
-			minBandwidth = link.Bandwidth()
+		if link.Capacity() > maxCapacity && link.Bandwidth()-packet.amount > RoutingLocalThreshold {
+			maxCapacity = link.Capacity()
 			destination = link
 		}
 	}
