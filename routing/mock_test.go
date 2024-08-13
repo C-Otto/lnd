@@ -887,6 +887,7 @@ func (m *mockMPPayment) TerminalInfo() (*channeldb.HTLCAttempt,
 type mockLink struct {
 	htlcswitch.ChannelLink
 	bandwidth         lnwire.MilliSatoshi
+	capacity          btcutil.Amount
 	mayAddOutgoingErr error
 	ineligible        bool
 }
@@ -894,6 +895,10 @@ type mockLink struct {
 // Bandwidth returns the bandwidth the mock was configured with.
 func (m *mockLink) Bandwidth() lnwire.MilliSatoshi {
 	return m.bandwidth
+}
+
+func (m *mockLink) Capacity() btcutil.Amount {
+	return m.capacity
 }
 
 // AuxBandwidth returns the bandwidth that can be used for a channel,
